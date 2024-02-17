@@ -1,18 +1,21 @@
 import os.path
 import urllib.request
 
+from datetime import datetime, timedelta
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
-from json_generator import *
+from Tasks.json_generator import *
+from Canvas.api import *
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/tasks.readonly", "https://www.googleapis.com/auth/tasks"]
 
 def main():
-  """Shows basic usage of the Tasks API.
+  """
+  Shows basic usage of the Tasks API.
   Prints the title and ID of the first 10 task lists.
   """
   creds = None
@@ -39,21 +42,25 @@ def main():
     service: Resource = build("tasks", "v1", credentials=creds)
 
     # Call the Tasks API
-    results = service.tasklists().list(maxResults=10).execute()
+    results = service.tasklists().list(maxResults=100).execute()
     items = results.get("items", [])
-    #print(results)
+    
     if not items:
       print("No task lists found.")
       return
     
-    print("Task lists:")
-    for item in items: 
-      print(f"{item['title']} ({item['id']}):")
-      tasksDict: dict = getTasksFromTaskList(service, item['id'])
-      tasksItems: list = tasksDict.get("items")
-      #for task in tasksItems:
-      print(f"{tasksItems[0]}")
-      createAndAddTask(service, tasklistID=item["id"], title="This is created with Python", dueDate=(2024, 2, 13))
+    tasklistID = createCanvasTaskList(service, tasklistsList=items)
+    courseIDs = get_course_id()
+    for id in courseIDs:
+      assignmentGenerator = get_assignments(id)
+      try:
+        while True:
+          assignment = next(assignmentGenerator)
+          #Everything is off by 1 day so I subtract 1
+          due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
+          createAndAddTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat())
+      except StopIteration:
+        pass
 
   except HttpError as err:
     print(err)

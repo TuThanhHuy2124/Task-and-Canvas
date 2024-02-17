@@ -1,6 +1,7 @@
 from collections import namedtuple
 import urllib.request
 import json
+
 url = 'https://canvas.eee.uci.edu'
 course_url = url + '/api/v1/courses'
 access = '?access_token='
