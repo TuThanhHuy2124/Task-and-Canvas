@@ -1,14 +1,17 @@
 from datetime import datetime
 from googleapiclient.discovery import Resource
+from collections import namedtuple
 
 def createParentTask(service: Resource, * , tasklistID: str, title: str) -> str:
+   """Create a parent task with the same name as the course name"""
+
    parentTask = service.tasks().insert(tasklist=tasklistID).execute()
    parentTask['title'] = title
    parentTask = service.tasks().update(tasklist=tasklistID, task=parentTask["id"], body=parentTask).execute()
    return parentTask['id']
 
 def createAndAddChildTask(service: Resource, * , tasklistID: str, title: str, dueDate: tuple|str = None, parentID: str = None) -> dict:
-   """Create a new task with specified title and add it to task list with tasklistID"""
+   """Create a new task with specified title and add it to task list with tasklistID under task with parentID"""
    
    newTask = service.tasks().insert(tasklist=tasklistID).execute()
    newTask["title"] = title
@@ -25,15 +28,44 @@ def createAndAddChildTask(service: Resource, * , tasklistID: str, title: str, du
 
    return newTask
 
+def sortChildrenTask(service: Resource, * , tasklistID: str) -> None:
+   """Sort all children tasks by due date"""
+
+   taskDict = dict()
+   childTask = namedtuple('childTask', ["id", "due", "parent"])
+   tasklistObj = getTasksFromTaskList(service, tasklistID=tasklistID)
+   tasklist = tasklistObj["items"]
+   childrenTasks = {childTask(task['id'], task['due'], task['parent']) for task in tasklist if "parent" in task}
+   
+   for task in childrenTasks:
+      if task.parent not in taskDict:
+         taskDict[task.parent] = [task]
+      else:
+         taskDict[task.parent].append(task)
+
+   for childrenList in taskDict.values():
+      childrenList.sort(key=lambda x: datetime.fromisoformat(x.due))
+
+   for parentID, childrenList in taskDict.items():
+      for i in range(0, len(childrenList)):
+         if i == 0:
+            service.tasks().move(tasklist=tasklistID, 
+                                 task=childrenList[i].id, 
+                                 parent=parentID).execute()
+         else:
+            service.tasks().move(tasklist=tasklistID, 
+                                 task=childrenList[i].id, 
+                                 parent=parentID, 
+                                 previous=childrenList[i-1].id).execute()
+
 def deleteChildlessParentTask(service: Resource, * , tasklistID: str) -> None:
+   """Delete all tasks that has no child"""
+
    tasklistObj = getTasksFromTaskList(service, tasklistID=tasklistID)
    tasklist = tasklistObj["items"]
    allParentID = {task['id'] for task in tasklist if "parent" not in task}
-   print(allParentID)
    hasChildID = {task['parent'] for task in tasklist if "parent" in task}
-   print(hasChildID)
    noChildID = allParentID - hasChildID
-   print(noChildID)
    for id in noChildID:
       service.tasks().delete(tasklist=tasklistID, task=id).execute()
 

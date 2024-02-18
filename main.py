@@ -64,6 +64,7 @@ def main():
         pass
       
     deleteChildlessParentTask(service, tasklistID=tasklistID)
+    sortChildrenTask(service, tasklistID=tasklistID)
   except HttpError as err:
     print(err)
 
