@@ -50,18 +50,20 @@ def main():
       return
     
     tasklistID = createCanvasTaskList(service, tasklistsList=items)
-    courseIDs = get_course_id()
-    for id in courseIDs:
-      assignmentGenerator = get_assignments(id)
+    courses = get_course()
+    for course in courses:
+      assignmentGenerator = get_assignments(*course)
       try:
+        parentID = createParentTask(service, tasklistID=tasklistID, title=course.name)
         while True:
           assignment = next(assignmentGenerator)
           #Everything is off by 1 day so I subtract 1
           due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
-          createAndAddTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat())
+          createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
       except StopIteration:
         pass
-
+      
+    deleteChildlessParentTask(service, tasklistID=tasklistID)
   except HttpError as err:
     print(err)
 

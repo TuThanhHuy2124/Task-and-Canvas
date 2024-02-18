@@ -13,19 +13,20 @@ with open("Canvas\\token.json") as file:
     data = json.load(file)
 accessToken = data["token"]
 
-Task = namedtuple('Task', ['name', 'due'])
+Course = namedtuple('Course', ['id', 'name'])
+Task = namedtuple('Task', ['course_name','name', 'due'])
 
-def get_course_id() -> list:
+def get_course() -> list:
     request = urllib.request.Request(course_url + access + accessToken + enrollment_state + state + increaseMax)
     response = urllib.request.urlopen(request)
     list_response = json.load(response)
-    return [course['id'] for course in list_response if 'name' in course]
+    return [Course(course['id'], course['name']) for course in list_response if 'name' in course]
 
-def get_assignments(course_id: str) -> list:
+def get_assignments(course_id: str, course_name: str) -> list:
     assignment_url = url + f'/api/v1/courses/{course_id}/assignments'
     request = urllib.request.Request(assignment_url + access + accessToken + increaseMax + future)
     response = urllib.request.urlopen(request)
     list_response = json.load(response)
     for item in list_response:
         if item["due_at"] is not None:
-            yield Task(item['name'], item['due_at'])
+            yield Task(course_name, item['name'], item['due_at'])

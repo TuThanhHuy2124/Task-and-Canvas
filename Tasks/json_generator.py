@@ -1,21 +1,41 @@
 from datetime import datetime
 from googleapiclient.discovery import Resource
 
-def createAndAddTask(service: Resource, * , tasklistID: str, title: str, dueDate: tuple|str = None) -> dict:
-    """Create a new task with specified title and add it to task list with tasklistID"""
+def createParentTask(service: Resource, * , tasklistID: str, title: str) -> str:
+   parentTask = service.tasks().insert(tasklist=tasklistID).execute()
+   parentTask['title'] = title
+   parentTask = service.tasks().update(tasklist=tasklistID, task=parentTask["id"], body=parentTask).execute()
+   return parentTask['id']
 
-    newTask = service.tasks().insert(tasklist=tasklistID).execute()
-    newTask["title"] = title
+def createAndAddChildTask(service: Resource, * , tasklistID: str, title: str, dueDate: tuple|str = None, parentID: str = None) -> dict:
+   """Create a new task with specified title and add it to task list with tasklistID"""
+   
+   newTask = service.tasks().insert(tasklist=tasklistID).execute()
+   newTask["title"] = title
 
-    if dueDate is not None:
+   if dueDate is not None:
       if type(dueDate) is tuple:
          dueStr = _formatRFC(*dueDate)
       elif type(dueDate) is str:
          dueStr = dueDate
-      newTask['due'] = dueStr
+   newTask['due'] = dueStr
 
-    newTask = service.tasks().update(tasklist=tasklistID, task=newTask["id"], body=newTask).execute()
-    return newTask
+   newTask = service.tasks().update(tasklist=tasklistID, task=newTask["id"], body=newTask).execute()
+   newTask = service.tasks().move(tasklist=tasklistID, task=newTask["id"], parent=parentID).execute()
+
+   return newTask
+
+def deleteChildlessParentTask(service: Resource, * , tasklistID: str) -> None:
+   tasklistObj = getTasksFromTaskList(service, tasklistID=tasklistID)
+   tasklist = tasklistObj["items"]
+   allParentID = {task['id'] for task in tasklist if "parent" not in task}
+   print(allParentID)
+   hasChildID = {task['parent'] for task in tasklist if "parent" in task}
+   print(hasChildID)
+   noChildID = allParentID - hasChildID
+   print(noChildID)
+   for id in noChildID:
+      service.tasks().delete(tasklist=tasklistID, task=id).execute()
 
 def getTasksFromTaskList(service: Resource, tasklistID: str) -> dict:
   """Return the dictionary that represents all the tasks in the specified task list"""
