@@ -58,17 +58,6 @@ def sortChildrenTask(service: Resource, * , tasklistID: str) -> None:
                                  parent=parentID, 
                                  previous=childrenList[i-1].id).execute()
 
-def deleteChildlessParentTask(service: Resource, * , tasklistID: str) -> None:
-   """Delete all tasks that has no child"""
-
-   tasklistObj = getTasksFromTaskList(service, tasklistID=tasklistID)
-   tasklist = tasklistObj["items"]
-   allParentID = {task['id'] for task in tasklist if "parent" not in task}
-   hasChildID = {task['parent'] for task in tasklist if "parent" in task}
-   noChildID = allParentID - hasChildID
-   for id in noChildID:
-      service.tasks().delete(tasklist=tasklistID, task=id).execute()
-
 def getTasksFromTaskList(service: Resource, tasklistID: str) -> dict:
   """Return the dictionary that represents all the tasks in the specified task list"""
    

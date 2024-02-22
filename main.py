@@ -54,16 +54,17 @@ def main():
     for course in courses:
       assignmentGenerator = get_assignments(*course)
       try:
+        # If has no assignment then no parent is created
+        assignment = next(assignmentGenerator)
         parentID = createParentTask(service, tasklistID=tasklistID, title=course.name)
         while True:
-          assignment = next(assignmentGenerator)
           #Everything is off by 1 day so I subtract 1
           due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
           createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
+          assignment = next(assignmentGenerator)
       except StopIteration:
         pass
       
-    deleteChildlessParentTask(service, tasklistID=tasklistID)
     sortChildrenTask(service, tasklistID=tasklistID)
   except HttpError as err:
     print(err)
