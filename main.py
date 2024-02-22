@@ -51,25 +51,24 @@ def main():
     
     tasklistID = createCanvasTaskList(service, tasklistsList=items)
     courses = get_course()
+
     for course in courses:
-      assignmentGenerator = get_assignments(*course)
+      assignments = list(get_assignments(*course))[::-1]
       submitted = list(get_ungraded(*course))
-      try:
-        # If has no assignment then no parent is created
-        assignment = next(assignmentGenerator)
+
+      # If list is not empty
+      if assignments:
         parentID = createParentTask(service, tasklistID=tasklistID, title=course.name)
-        while True:
-          #Everything is off by 1 day so I subtract 1
-          due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
-          newTaskBody = createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
-          if assignment in submitted:
-            print(newTaskBody, "\n")
-            markComplete(service, tasklistID=tasklistID, taskBody=newTaskBody)
-          assignment = next(assignmentGenerator)
-      except StopIteration:
-        pass
-      
-    sortChildrenTask(service, tasklistID=tasklistID)
+      else:
+        continue
+
+      for assignment in assignments:
+        #Everything is off by 1 day so I subtract 1
+        due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
+        newTaskBody = createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
+        if assignment in submitted:
+          markComplete(service, tasklistID=tasklistID, taskBody=newTaskBody)
+
   except HttpError as err:
     print(err)
 

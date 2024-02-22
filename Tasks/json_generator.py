@@ -27,39 +27,10 @@ def createAndAddChildTask(service: Resource, * , tasklistID: str, title: str, du
    newTask = service.tasks().move(tasklist=tasklistID, task=newTask["id"], parent=parentID).execute()
 
    return newTask
-
-def sortChildrenTask(service: Resource, * , tasklistID: str) -> None:
-   """Sort all children tasks by due date"""
-
-   taskDict = dict()
-   childTask = namedtuple('childTask', ["id", "due", "parent"])
-   tasklistObj = getTasksFromTaskList(service, tasklistID=tasklistID)
-   tasklist = tasklistObj["items"]
-   childrenTasks = {childTask(task['id'], task['due'], task['parent']) for task in tasklist if "parent" in task}
-   
-   for task in childrenTasks:
-      if task.parent not in taskDict:
-         taskDict[task.parent] = [task]
-      else:
-         taskDict[task.parent].append(task)
-
-   for childrenList in taskDict.values():
-      childrenList.sort(key=lambda x: datetime.fromisoformat(x.due))
-
-   for parentID, childrenList in taskDict.items():
-      for i in range(0, len(childrenList)):
-         if i == 0:
-            service.tasks().move(tasklist=tasklistID, 
-                                 task=childrenList[i].id, 
-                                 parent=parentID).execute()
-         else:
-            service.tasks().move(tasklist=tasklistID, 
-                                 task=childrenList[i].id, 
-                                 parent=parentID, 
-                                 previous=childrenList[i-1].id).execute()
             
 def markComplete(service: Resource, * , tasklistID: str, taskBody: dict) -> None:
-   print(taskBody, "\n")
+   """Mark a task as completed"""
+
    taskBody["status"] = "completed"
    service.tasks().update(tasklist=tasklistID, task=taskBody["id"], body=taskBody).execute()
 

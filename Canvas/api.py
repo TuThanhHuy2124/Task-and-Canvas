@@ -10,6 +10,7 @@ state = "active"
 increaseMax = "&per_page=100"
 future = "&bucket=future"
 ungraded ="&bucket=ungraded"
+orderByDue = "&order_by=due_at"
 with open("Canvas\\token.json") as file:
     data = json.load(file)
 accessToken = data["token"]
@@ -25,7 +26,7 @@ def get_course() -> list:
 
 def get_assignments(course_id: str, course_name: str) -> list:
     assignment_url = url + f'/api/v1/courses/{course_id}/assignments'
-    request = urllib.request.Request(assignment_url + access + accessToken + increaseMax + future)
+    request = urllib.request.Request(assignment_url + access + accessToken + increaseMax + future + orderByDue)
     response = urllib.request.urlopen(request)
     list_response = json.load(response)
     for item in list_response:
@@ -34,11 +35,8 @@ def get_assignments(course_id: str, course_name: str) -> list:
 
 def get_ungraded(course_id: str, course_name: str) -> list:
     assignment_url = url + f'/api/v1/courses/{course_id}/assignments'
-    request = urllib.request.Request(assignment_url + access + accessToken + increaseMax + ungraded)
+    request = urllib.request.Request(assignment_url + access + accessToken + increaseMax + ungraded + orderByDue)
     response = urllib.request.urlopen(request)
     list_response = json.load(response)
     for item in list_response:
         yield Task(course_name, item['name'], item['due_at'])
-
-for course in get_course():
-    get_ungraded(course_id=course.id, course_name=course.name)
