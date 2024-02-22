@@ -53,6 +53,7 @@ def main():
     courses = get_course()
     for course in courses:
       assignmentGenerator = get_assignments(*course)
+      submitted = list(get_ungraded(*course))
       try:
         # If has no assignment then no parent is created
         assignment = next(assignmentGenerator)
@@ -60,7 +61,10 @@ def main():
         while True:
           #Everything is off by 1 day so I subtract 1
           due = datetime.fromisoformat(assignment.due) - timedelta(days=1)
-          createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
+          newTaskBody = createAndAddChildTask(service, tasklistID=tasklistID, title=assignment.name, dueDate=due.isoformat(), parentID=parentID)
+          if assignment in submitted:
+            print(newTaskBody, "\n")
+            markComplete(service, tasklistID=tasklistID, taskBody=newTaskBody)
           assignment = next(assignmentGenerator)
       except StopIteration:
         pass

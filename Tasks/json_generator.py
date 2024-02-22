@@ -57,6 +57,11 @@ def sortChildrenTask(service: Resource, * , tasklistID: str) -> None:
                                  task=childrenList[i].id, 
                                  parent=parentID, 
                                  previous=childrenList[i-1].id).execute()
+            
+def markComplete(service: Resource, * , tasklistID: str, taskBody: dict) -> None:
+   print(taskBody, "\n")
+   taskBody["status"] = "completed"
+   service.tasks().update(tasklist=tasklistID, task=taskBody["id"], body=taskBody).execute()
 
 def getTasksFromTaskList(service: Resource, tasklistID: str) -> dict:
   """Return the dictionary that represents all the tasks in the specified task list"""
