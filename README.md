@@ -1,6 +1,6 @@
 # Task & Canvas
 
-Task & Canvas bridges the gap between Google Tasks and Canvas, allowing users to pull and write task data from Canvas to Google Tasks
+**Task & Canvas** bridges the gap between Google Tasks and Canvas, allowing users to pull and write task data from Canvas to Google Tasks
 
 ## Installation
 
