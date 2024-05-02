@@ -2,6 +2,11 @@
 
 **Task & Canvas** bridges the gap between Google Tasks and Canvas, allowing users to pull and write task data from Canvas to Google Tasks
 
+## Video Walkthrough
+
+Here's a walkthrough of the program:
+![](https://github.com/TuThanhHuy2124/Task-and-Canvas/blob/main/public/task-and-canvas.gif)
+
 ## Installation
 
 1. Clone the project to your local machine ```git clone https://github.com/TuThanhHuy2124/Task-and-Canvas```
